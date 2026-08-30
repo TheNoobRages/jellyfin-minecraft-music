@@ -1,0 +1,31 @@
+name: JellyfinVoiceChat
+version: '${version}'
+main: com.jellyfinvc.JellyfinVoiceChatPlugin
+api-version: '26.2'
+description: Stream music from a Jellyfin server into Minecraft through Simple Voice Chat.
+depend: [voicechat]
+
+commands:
+  music:
+    description: Browse and control Jellyfin music playback.
+    usage: /music [play|search|queue|playlist|pause|resume|stop|skip|volume|gui|jukebox|group|broadcast|reload]
+
+permissions:
+  jellyfinvc.use:
+    description: Play personal Jellyfin audio streams.
+    default: true
+  jellyfinvc.jukebox:
+    description: Place and control jukeboxes.
+    default: true
+  jellyfinvc.group:
+    description: Play audio into your voice chat group.
+    default: true
+  jellyfinvc.broadcast:
+    description: Play audio server-wide.
+    default: op
+  jellyfinvc.myserver:
+    description: Connect your own personal Jellyfin server instead of the shared one.
+    default: true
+  jellyfinvc.admin:
+    description: Reload the plugin configuration.
+    default: op

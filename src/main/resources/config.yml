@@ -1,0 +1,39 @@
+# JellyfinVoiceChat configuration.
+# After editing this file, run /music reload in-game (or restart the server).
+
+jellyfin:
+  # Base URL of your Jellyfin server, no trailing slash. Must be reachable
+  # from the machine running this Minecraft server.
+  server-url: "http://localhost:8096"
+
+  # Dashboard > API Keys > "+" in Jellyfin. This key has full access to your
+  # library, so keep this file private.
+  api-key: ""
+
+  # Optional. Only needed if your Jellyfin server requires a user context to
+  # stream (most setups don't with an API key). Leave blank otherwise.
+  user-id: ""
+
+  # Max results returned by /music search and /music jukebox search.
+  search-limit: 20
+
+playback:
+  # Starting volume for new sessions, 0.0 - 2.0 (1.0 = 100%, 2.0 = 200% boost).
+  default-volume: 0.5
+
+  # Starting volume specifically for /music broadcast sessions - kept lower
+  # by default since it plays for everyone on the server at once.
+  broadcast-default-volume: 0.2
+
+  # Radius in blocks that a placed jukebox can be heard from.
+  jukebox-distance: 48.0
+
+  # How many 20ms audio frames (so buffer-frames / 50 = seconds) to buffer
+  # ahead of playback. Higher values are more resilient to network hiccups
+  # but add latency before audio starts.
+  buffer-frames: 50
+
+  # Whether /music broadcast is allowed at all right now. Toggle with
+  # /music broadcast disable|enable in-game (op only) - that command updates
+  # this value automatically, no need to edit it here or run /music reload.
+  broadcast-enabled: true
