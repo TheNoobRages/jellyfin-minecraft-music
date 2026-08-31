@@ -45,6 +45,8 @@ public final class PlaybackSession {
     private volatile boolean sessionPaused = false;
     private JellyfinClient albumRadioClient;
     private String albumRadioExcludeId;
+    /** Bumped by anything that should invalidate an in-flight async continuation fetch. */
+    private int stateVersion = 0;
 
     private Consumer<JellyfinTrack> onTrackChanged = t -> {
     };
@@ -102,6 +104,7 @@ public final class PlaybackSession {
     /** Clears the queue and immediately plays this track. Call only from the main thread. */
     public void playNow(JellyfinTrack track) {
         albumRadioClient = null;
+        stateVersion++;
         queue.clear();
         queue.addFirst(track);
         if (currentPlayer != null) {
@@ -130,6 +133,7 @@ public final class PlaybackSession {
     public void stopAll() {
         stopRequested = true;
         albumRadioClient = null;
+        stateVersion++;
         queue.clear();
         if (currentSource != null) {
             currentSource.stop();
@@ -174,8 +178,11 @@ public final class PlaybackSession {
     private void advance() {
         JellyfinTrack next = queue.pollFirst();
         if (next == null) {
+            JellyfinTrack justFinished = nowPlaying;
             nowPlaying = null;
-            if (albumRadioClient != null) {
+            if (justFinished != null && justFinished.albumId() != null && !justFinished.albumId().isBlank()) {
+                continueSameAlbum(justFinished);
+            } else if (albumRadioClient != null) {
                 continueAlbumRadio();
             } else {
                 finish();
@@ -222,6 +229,56 @@ public final class PlaybackSession {
         this.currentPlayer = player;
         source.start();
         player.startPlaying();
+    }
+
+    /**
+     * A single track that belongs to an album finished with nothing else
+     * queued: fetch that album's full, correctly-ordered track list, find
+     * where this track sits, and queue up whatever comes after it. Falls
+     * back to album radio (if that happens to already be on for this
+     * session) or a normal end if there's nothing left in the album.
+     */
+    private void continueSameAlbum(JellyfinTrack finishedTrack) {
+        JellyfinClient client = finishedTrack.client();
+        String albumId = finishedTrack.albumId();
+        String finishedId = finishedTrack.id();
+        int expectedVersion = stateVersion;
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            List<JellyfinTrack> albumTracks;
+            try {
+                albumTracks = client.getAlbumItems(albumId);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Album continuation: failed to load album - " + e.getMessage());
+                albumTracks = List.of();
+            }
+            int idx = -1;
+            for (int i = 0; i < albumTracks.size(); i++) {
+                if (albumTracks.get(i).id().equals(finishedId)) {
+                    idx = i;
+                    break;
+                }
+            }
+            List<JellyfinTrack> rest = (idx >= 0 && idx + 1 < albumTracks.size())
+                    ? albumTracks.subList(idx + 1, albumTracks.size())
+                    : List.of();
+            List<JellyfinTrack> finalRest = rest;
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (stateVersion != expectedVersion) {
+                    // playNow/stop happened while this fetch was in flight.
+                    return;
+                }
+                if (finalRest.isEmpty()) {
+                    if (albumRadioClient != null) {
+                        continueAlbumRadio();
+                    } else {
+                        finish();
+                    }
+                    return;
+                }
+                queue.addAll(finalRest);
+                advance();
+            });
+        });
     }
 
     /**

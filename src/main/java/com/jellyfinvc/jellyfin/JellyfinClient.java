@@ -180,8 +180,9 @@ public final class JellyfinClient {
             String name = Json.asString(item.get("Name"), "Unknown Track");
             String artist = joinArtists(item);
             String album = Json.asString(item.get("Album"), "");
+            String albumId = Json.asString(item.get("AlbumId"), null);
             long ticks = Json.asLong(item.get("RunTimeTicks"), 0L);
-            tracks.add(new JellyfinTrack(this, id, name, artist, album, ticks));
+            tracks.add(new JellyfinTrack(this, id, name, artist, album, albumId, ticks));
         }
         return tracks;
     }

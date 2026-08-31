@@ -31,13 +31,22 @@ whole thing). In any track list, click a track to play it now, or shift-click
 to add it to the queue - both are always available side by side. The bottom
 row of every menu has pause/resume, skip, stop, and volume controls.
 
-## Album radio
+## Continuous playback
 
-When you play a whole album (from Browse Albums, idle-click or shift-click),
-another random album from the same Jellyfin server automatically starts once
-it ends - indefinitely, until you play something else or stop. This is on by
-default; turn it off for yourself with `/music albumradio off` (`on` to turn
-it back on, no args to check the current setting).
+Pick a single song that belongs to an album (from search, a playlist, or
+Browse Albums), and once it ends with nothing else queued, the rest of that
+album plays automatically in track order - picking up right after the song
+you chose, not from the top. This always happens; it's just what "nothing
+queued after this song" naturally falls back to.
+
+Play a *whole* album instead (Browse Albums, idle-click or shift-click), and
+once you reach the actual end of it, **album radio** takes over: a different
+random album from the same Jellyfin server starts automatically, indefinitely,
+until you play something else or stop. This is on by default; turn it off for
+yourself with `/music albumradio off` (`on` to turn it back on, no args to
+check the current setting). A single song's own "rest of the album" playback
+will also spill into album radio at the true end of that album, if you have
+it enabled.
 
 ## Playback modes
 
